@@ -1,0 +1,14 @@
+build/
+install/
+log/
+logs/
+__pycache__/
+*.pcd
+*.pickle
+*.bag
+*.db3
+*.gif
+*.mp4
+*.png
+*.pdf
+*.tar.gz

@@ -1,0 +1,214 @@
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
+from launch.conditions import IfCondition, UnlessCondition
+
+
+def generate_launch_description():
+    pointcloud_topic = LaunchConfiguration('pointcloud_topic')
+    scan_target_frame = LaunchConfiguration('scan_target_frame')
+    use_cloud_accumulation = LaunchConfiguration('use_cloud_accumulation')
+    accumulation_max_clouds = LaunchConfiguration('accumulation_max_clouds')
+    accumulation_publish_period_ms = LaunchConfiguration('accumulation_publish_period_ms')
+    accumulation_min_height = LaunchConfiguration('accumulation_min_height')
+    accumulation_max_height = LaunchConfiguration('accumulation_max_height')
+    accumulation_max_cloud_age_sec = LaunchConfiguration('accumulation_max_cloud_age_sec')
+    scan_transform_tolerance = LaunchConfiguration('scan_transform_tolerance')
+    use_latest_transform = LaunchConfiguration('use_latest_transform')
+    output_now_stamp = LaunchConfiguration('output_now_stamp')
+    publish_debug_cloud = LaunchConfiguration('publish_debug_cloud')
+    debug_cloud_topic = LaunchConfiguration('debug_cloud_topic')
+    publish_projected_debug_cloud = LaunchConfiguration('publish_projected_debug_cloud')
+    projected_debug_cloud_topic = LaunchConfiguration('projected_debug_cloud_topic')
+    remove_tilt = LaunchConfiguration('remove_tilt')
+    height_relative_to_sensor = LaunchConfiguration('height_relative_to_sensor')
+    near_sensor_exclusion_radius = LaunchConfiguration('near_sensor_exclusion_radius')
+    near_sensor_exclusion_min_z = LaunchConfiguration('near_sensor_exclusion_min_z')
+    effective_range_max = LaunchConfiguration('effective_range_max')
+    keep_farthest_per_angle = LaunchConfiguration('keep_farthest_per_angle')
+    scan_yaw_offset_rad = LaunchConfiguration('scan_yaw_offset_rad')
+    scan_min_height = LaunchConfiguration('scan_min_height')
+    scan_max_height = LaunchConfiguration('scan_max_height')
+    scan_time = LaunchConfiguration('scan_time')
+    scan_range_min = LaunchConfiguration('scan_range_min')
+    scan_range_max = LaunchConfiguration('scan_range_max')
+
+    scan_parameters = [{
+        'target_frame': scan_target_frame,
+        'transform_tolerance': scan_transform_tolerance,
+        'use_latest_transform': use_latest_transform,
+        'output_now_stamp': output_now_stamp,
+        'publish_debug_cloud': publish_debug_cloud,
+        'debug_cloud_topic': debug_cloud_topic,
+        'publish_projected_debug_cloud': publish_projected_debug_cloud,
+        'projected_debug_cloud_topic': projected_debug_cloud_topic,
+        'remove_tilt': remove_tilt,
+        'height_relative_to_sensor': height_relative_to_sensor,
+        'near_sensor_exclusion_radius': near_sensor_exclusion_radius,
+        'near_sensor_exclusion_min_z': near_sensor_exclusion_min_z,
+        'effective_range_max': effective_range_max,
+        'keep_farthest_per_angle': keep_farthest_per_angle,
+        'scan_yaw_offset_rad': scan_yaw_offset_rad,
+        'min_height': scan_min_height,
+        'max_height': scan_max_height,
+        'angle_min': -3.14, # -2.3562
+        'angle_max': 3.14,  # 2.3562
+        'angle_increment': 0.0087,
+        'scan_time': scan_time,
+        'range_min': scan_range_min,
+        'range_max': scan_range_max,
+        'use_inf': True,
+        'inf_epsilon': 1.0
+    }]
+
+    return LaunchDescription([
+        DeclareLaunchArgument(
+            'pointcloud_topic',
+            default_value='/utlidar/cloud_synced'
+        ),
+        DeclareLaunchArgument(
+            'scan_target_frame',
+            default_value='base_footprint'
+        ),
+        DeclareLaunchArgument(
+            'use_cloud_accumulation',
+            default_value='true'
+        ),
+        DeclareLaunchArgument(
+            'accumulation_max_clouds',
+            default_value='1'  # 原 '3'
+        ),
+        DeclareLaunchArgument(
+            'accumulation_publish_period_ms',
+            default_value='100'
+        ),
+        DeclareLaunchArgument(
+            'accumulation_min_height',
+            default_value='0.05'
+        ),
+        DeclareLaunchArgument(
+            'accumulation_max_height',
+            default_value='10.0'
+        ),
+        DeclareLaunchArgument(
+            'accumulation_max_cloud_age_sec',
+            default_value='2.0'
+        ),
+        DeclareLaunchArgument(
+            'scan_transform_tolerance',
+            default_value='0.5'
+        ),
+        DeclareLaunchArgument(
+            'use_latest_transform',
+            default_value='true'
+        ),
+        DeclareLaunchArgument(
+            'output_now_stamp',
+            default_value='false'  # 原 'true'
+        ),
+        DeclareLaunchArgument(
+            'publish_debug_cloud',
+            default_value='false'
+        ),
+        DeclareLaunchArgument(
+            'debug_cloud_topic',
+            default_value='/cloud_for_scan'
+        ),
+        DeclareLaunchArgument(
+            'publish_projected_debug_cloud',
+            default_value='false'
+        ),
+        DeclareLaunchArgument(
+            'projected_debug_cloud_topic',
+            default_value='/cloud_projected_for_scan'
+        ),
+        DeclareLaunchArgument(
+            'remove_tilt',
+            default_value='false'
+        ),
+        DeclareLaunchArgument(
+            'height_relative_to_sensor',
+            default_value='false'
+        ),
+        DeclareLaunchArgument(
+            'near_sensor_exclusion_radius',
+            default_value='0.65'
+        ),
+        DeclareLaunchArgument(
+            'near_sensor_exclusion_min_z',
+            default_value='-1.0'
+        ),
+        DeclareLaunchArgument(
+            'effective_range_max',
+            default_value='12.0'
+        ),
+        DeclareLaunchArgument(
+            'keep_farthest_per_angle',
+            default_value='false'
+        ),
+        DeclareLaunchArgument(
+            'scan_yaw_offset_rad',
+            default_value='0.0'
+        ),
+        DeclareLaunchArgument(
+            'scan_min_height',
+            default_value='-0.3'
+        ),
+        DeclareLaunchArgument(
+            'scan_max_height',
+            default_value='-0.1'
+        ),
+        DeclareLaunchArgument(
+            'scan_time',
+            default_value='0.1'
+        ),
+        DeclareLaunchArgument(
+            'scan_range_min',
+            default_value='0.3'
+        ),
+        DeclareLaunchArgument(
+            'scan_range_max',
+            default_value='20.0'
+        ),
+        Node(
+            package='go2_perception', executable='utlidar_time_sync',
+            name='utlidar_time_sync_node'
+        ),
+        Node(
+            package='go2_perception', executable='cloud_accumulation',
+            remappings=[
+                ('/utlidar/cloud_deskewed', pointcloud_topic),
+                ('/utlidar/cloud_accumulated', '/trans_cloud')
+                ],
+            parameters=[{
+                'max_clouds': accumulation_max_clouds,
+                'publish_period_ms': accumulation_publish_period_ms,
+                'min_height': accumulation_min_height,
+                'max_height': accumulation_max_height,
+                'max_cloud_age_sec': accumulation_max_cloud_age_sec,
+            }],
+            name='cloud_accumulation_node'
+            , condition=IfCondition(use_cloud_accumulation)
+        ),
+        Node(
+            package='go2_perception', executable='pointcloud_to_laserscan_node',
+            remappings=[
+                ('cloud_in', pointcloud_topic), 
+                ('scan', '/scan')
+                ],
+            parameters=scan_parameters,
+            name='pointcloud_to_laserscan_node',
+            condition=UnlessCondition(use_cloud_accumulation)
+        ),
+        Node(
+            package='go2_perception', executable='pointcloud_to_laserscan_node',
+            remappings=[
+                ('cloud_in', '/trans_cloud'), 
+                ('scan', '/scan')
+                ],
+            parameters=scan_parameters,
+            name='pointcloud_to_laserscan_node_accumulated',
+            condition=IfCondition(use_cloud_accumulation)
+        )
+    ])

@@ -1,0 +1,7 @@
+image: /home/unitree/go2-nav2-amcl/src/go2_navigation2/maps/map5.pgm
+mode: trinary
+resolution: 0.04
+origin: [-18.4, -3.28, 0]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.25

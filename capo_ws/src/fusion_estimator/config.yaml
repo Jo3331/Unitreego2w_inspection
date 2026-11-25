@@ -1,0 +1,96 @@
+fusion_estimator_node:
+  ros__parameters:
+    # 98.0~Unitree Go2W; 99.0~Unitree Go2;
+    RobotType: 98.0
+
+    # subscribe sensor topics
+    sub_imu_topic: "SMX/Go2IMU"  # msg type: sensor_msgs::msg::Imu
+    sub_joint_topic: "SMX/Go2Joint"  
+    # msg type: float64_multi_array
+    # A[ 0 ~ 15] should be motor radian           of FL_Hip, FL_Thigh, FL_Calf, FL_Wheel, FR_Hip,..., RL_Hip,..., RR_Hip,...;
+    # A[16 ~ 31] should be motor angular velocity of FL_Hip, , , , FR_Hip, , , , RL_Hip, , , , RR_Hip;
+    # A[32 ~ 47] should be motor torque           of FL_Hip, , , , FR_Hip, , , , RL_Hip, , , , RR_Hip;
+    # if you do not have wheel motors, set wheel slots to 0:
+    #   q:   A[3 7 11 15]
+    #   dq:  A[19 23 27 31]
+    #   tau: A[35 39 43 47]
+    #
+    # if you use contact sensor instead of motor torque, put contact data into:
+    #   A[34 38 42 46]
+    # and set other torque slots A[32 ~ 47] to 0.
+
+    # 订阅复位/模式命令的 ROS2 Topic
+    sub_mode_topic: "SMX/SportCmd"
+
+    # 发布全 3D 里程计的 Topic
+    pub_odom_topic: "SMX/Odom"
+
+    # 发布平面里程计的 Topic
+    pub_odom2d_topic: "SMX/Odom_2D"
+
+    # Odometry 消息里的 frame_id
+    odom_frame: "odom"
+
+    # Odometry 消息里的 child_frame_id
+    base_frame: "base_link"
+    base_frame_2d: "base_link_2D"
+
+    # 各关节的身体坐标系连线
+    pub_body_joint_marker_enable: true
+    pub_body_joint_marker_topic: "SMX/Joints_Marker"
+
+    # IMU使能
+    imu_data_enable: true
+    # 运动学估计使能
+    leg_pos_enable: true
+    leg_vel_enable: true
+    # yaw漂移修正使能，会降低运动的位置估计精度，但避免长时间站立的yaw漂移
+    leg_ori_enable: false
+    # 轮足狗斜坡模式使能，会降低爬楼梯的高度估计精度
+    slope_mode_enable: true
+
+    contact_sensor_threshold: 0.0   # use 0.0 when joint topic carries motor tau; set contact_source=foot_force in adapter if you want contact sensor mode
+    foot_force_threshold:    -30.0  # set 0.0  if you use contact sensor, or modify it. suggest -30.0 for unitree Go2W
+    min_stair_height: 0.08
+
+unitree_lowstate_adapter_node:
+  ros__parameters:
+    # Unitree raw low-frequency lowstate topic
+    sub_lowstate_topic: "lowstate"
+
+    # Publish converted topics for fusion_estimator_node
+    pub_imu_topic: "SMX/Go2IMU"
+    pub_joint_topic: "SMX/Go2Joint"
+
+    # frame_id for outgoing sensor_msgs/Imu
+    imu_frame: "base_imu"
+
+    # orientation_source: rpy | quaternion
+    # default uses rpy to match the upstream Unitree bridge behavior
+    orientation_source: "rpy"
+
+    # contact_source: motor_tau | foot_force | foot_force_est
+    # motor_tau is the default for wheel mode; if you switch to foot_force / foot_force_est,
+    # keep fusion_estimator_node.contact_sensor_threshold > 0 and the adapter will only fill calf slots.
+    contact_source: "motor_tau"
+
+    # Optional scaling when contact_source uses foot_force / foot_force_est
+    foot_force_scale: 1.0
+
+    # Standstill deadzone filtering for raw lowstate noise.
+    enable_standstill_deadzone: true
+    standstill_gyro_norm_threshold: 0.05
+    standstill_joint_dq_rms_threshold: 0.08
+    standstill_accel_norm_target: 9.81
+    standstill_accel_norm_tolerance: 0.8
+    standstill_required_frames: 5
+    gyro_deadzone: 0.03
+    accel_world_xy_deadzone: 0.15
+    accel_world_z_deadzone: 0.25
+    joint_dq_deadzone: 0.05
+    joint_tau_deadzone: 0.10
+
+    # Maps output joint slots [FL_Hip, FL_Thigh, FL_Calf, FL_Wheel, FR_Hip, ... RR_Wheel]
+    # to Unitree LowState.motor_state indices.
+    # Default assumes the first 16 motors already follow the wheel-legged ordering.
+    motor_index_map: [0, 1, 2, 12, 3, 4, 5, 13, 6, 7, 8, 14, 9, 10, 11, 15]
